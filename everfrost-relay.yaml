@@ -1,23 +1,23 @@
 # EverFrost relay - reads an Anker EverFrost Powered Cooler 40 over Bluetooth and serves it over Wi-Fi.
-# Flash over Wi-Fi: esphome upload everfrost-relay.yaml --device everfrost-relay.local
-# Live readings and logs: http://everfrost-relay.local
+# Flash over Wi-Fi: esphome upload everfrost-relay.yaml --device 192.168.20.50
+# Live readings and logs: http://192.168.20.50 (everfrost-relay.local)
 #
 # Protocol (confirmed on the 40, matches the EverFrost 30 layout):
 #   service 0x0157F5DA, write 0x7777 (no response), notify 0x8888.
 #   Status request 08 EE 00 00 00 01 01 0A 00 02 -> 54-byte reply starting 09 FF, byte 7 = length,
 #   last byte = sum of the others mod 256. Byte 13 battery %, 17 current temp, 18 target temp (degF + 128).
 # Read-only: the only thing ever sent is the status request above.
+substitutions:
+  name: anker-everfrost-relay
+  friendly_name: Anker Everfrost Relay
+
+packages:
+  esphome.bluetooth-proxy: "github://esphome/bluetooth-proxies/esp32-generic/esp32-generic.yaml@main"
 
 esphome:
-  name: everfrost-relay
-  friendly_name: EverFrost Relay
-  project:
-    name: tapiocateeh.everfrost-relay
-    version: "1.0.0"
-
-# Announces this config over mDNS so ESPHome Builder lists the device under "Discovered" and can adopt it.
-dashboard_import:
-  package_import_url: github://tapiocateeh/everfrost-relay/everfrost-relay.yaml@main
+  name: ${name}
+  name_add_mac_suffix: false
+  friendly_name: ${friendly_name}
 
 esp32:
   board: esp32dev
@@ -45,8 +45,9 @@ output:
 
 ota:
   - platform: esphome
+    encryption:
 
-# Home Assistant native API (HA: Settings > Devices & services > ESPHome, host everfrost-relay.local or its IP).
+# Home Assistant native API (add the device in HA: Settings > Devices > ESPHome, host 192.168.20.50).
 api:
   encryption:
     key: !secret api_encryption_key
@@ -67,6 +68,10 @@ mqtt:
 esp32_ble_tracker:
   scan_parameters:
     active: true
+
+# The proxy package reserves 3 BLE connections; the cooler needs one more and the ESP32 defaults to 3 total.
+bluetooth_proxy:
+  connection_slots: 2
 
 ble_client:
   - mac_address: E8:EE:CC:5A:3F:29
