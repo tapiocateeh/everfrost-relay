@@ -1,0 +1,6 @@
+# Allow-list: this folder also holds secrets, notes and build output that must never be published.
+# Only the files below are tracked; everything else is ignored.
+*
+!.gitignore
+!README.md
+!everfrost-relay.yaml
